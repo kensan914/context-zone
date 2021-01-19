@@ -60,27 +60,27 @@ const clickHandler = (e) => {
 customWithLayersZoned([authLayer], async () => {
   // Promise
 
-  // request()
-  //   .then((res) => {
-  //     // console.dir(([...LayerStack]));
-  //     console.log(authChecker.check());
+  request()
+    .then((res) => {
+      // console.dir(([...LayerStack]));
+      console.log(authChecker.check());
 
-  //     customWithLayersZoned([authLayer2], () => {
-  //       request()
-  //         .then((res) => {
-  //           console.dir(([...LayerStack]));
-  //           console.log(authChecker.check());
-  //         })
-  //         .finally(() => {
-  //         });
-  //     });
+      customWithLayersZoned([authLayer2], () => {
+        request()
+          .then((res) => {
+            console.dir(([...LayerStack]));
+            console.log(authChecker.check());
+          })
+          .finally(() => {
+          });
+      });
 
-  //   })
-  //   .catch((err) => {
-  //     console.error("err");
-  //   })
-  //   .finally(() => {
-  //   });
+    })
+    .catch((err) => {
+      console.error("err");
+    })
+    .finally(() => {
+    });
 
   // simple Promise
   // const promise = new Promise((resolve) => {
@@ -91,10 +91,10 @@ customWithLayersZoned([authLayer], async () => {
   //     console.error(authChecker.check());
   //   });
 
-  const result = await request();
-  // const result = await promise;
-  console.error(result);
-  console.error(authChecker.check());
+  // const result = await request();
+  // // const result = await promise;
+  // console.error(result);
+  // console.error(authChecker.check());
 
   // const result2 = await request();
   // // const result = await promise;
