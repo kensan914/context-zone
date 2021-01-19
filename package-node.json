@@ -1,0 +1,16 @@
+{
+    "scripts": {
+        "start": "webpack -w --mode development",
+        "dev": "webpack --mode development",
+        "build": "webpack --mode production"
+    },
+    "dependencies": {
+        "zone.js": "^0.11.1"
+    },
+    "devDependencies": {
+        "webpack": "^5.3.2",
+        "webpack-cli": "^4.1.0"
+    }
+}
+
+// "type": "module",
