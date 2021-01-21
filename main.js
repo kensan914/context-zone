@@ -1,9 +1,7 @@
 // node --experimental-modules main.js
-// import "zone.js"
-import { layer, withLayers, withoutLayers } from './ContextJS/src/contextjs.js';
-import { asyncawaitWithLayers, customWithLayersZoned, customWithoutLayersZoned, zonezone } from "./context-zone/zoneContextJS.js";
-import { currentLayers, invalidateLayerComposition, LayerStack, proceed, resetLayerStack } from "./ContextJS/src/Layers.js";
-import { withLayersZoned } from "./PSD/dynamic-extent-zoned.js";
+import { layer } from './ContextJS/src/contextjs.js';
+import { withLayersZone, withoutLayersZone } from "./context-zone/contextZone.js";
+import { LayerStack, proceed } from "./ContextJS/src/Layers.js";
 
 
 class AuthChecker {
@@ -20,18 +18,14 @@ authLayer.refineClass(AuthChecker, {
     return `認証済みです(${proceed()})`;
   }
 });
-// console.log({ ...authLayer['0'] });
 
 const authLayer2 = layer("authLayer2");
-// console.log(1);
-// console.log({ ...authLayer2 });
 authLayer2.refineObject(authChecker, {
   check() {
     return `認証済みです2`;
     // return `認証済みです2(${proceed()})`;
   },
 });
-// console.log(authChecker.check);
 
 // 擬似的なリクエスト処理
 const request = () => new Promise((resolve) => {
@@ -43,92 +37,35 @@ const request = () => new Promise((resolve) => {
 const clickHandler = (e) => {
   console.log(e);
   console.error(authChecker.check());
-
-  // customWithLayersZoned([authLayer2], () => {
-  //   window.addEventListener("click", () => console.log(authChecker.check()), true);
-  // });
 }
 
-// asyncawaitWithLayers([authLayer], async () => {
-//   await request();
-//   console.error("終了");
-
-//   // await (() => { console.log("実行"); })();
-// });
-
-
-customWithLayersZoned([authLayer], async () => {
+withLayersZone([authLayer], async () => {
   // Promise
-
-  request()
-    .then((res) => {
-      // console.dir(([...LayerStack]));
-      console.log(authChecker.check());
-
-      customWithLayersZoned([authLayer2], () => {
-        request()
-          .then((res) => {
-            console.dir(([...LayerStack]));
-            console.log(authChecker.check());
-          })
-          .finally(() => {
-          });
-      });
-
-    })
-    .catch((err) => {
-      console.error("err");
-    })
-    .finally(() => {
-    });
-
-  // simple Promise
-  // const promise = new Promise((resolve) => {
-  //   resolve("resolve");
-  // });
-  // promise
-  //   .then(() => {
+  console.warn(window);
+  window.undefined;
+  // request()
+  //   .then(async (res) => {
   //     console.error(authChecker.check());
+
+  //     withoutLayersZone([authLayer], () => {
+  //       request()
+  //         .then((res) => {
+  //           console.error([...LayerStack]);
+  //           console.error(authChecker.check());
+  //         })
+  //         .finally(() => {
+  //         });
+  //     });
+  //   })
+  //   .catch((err) => {
+  //     console.error("err");
+  //   })
+  //   .finally(() => {
   //   });
-
-  // const result = await request();
-  // // const result = await promise;
-  // console.error(result);
-  // console.error(authChecker.check());
-
-  // const result2 = await request();
-  // // const result = await promise;
-  // console.error(result2);
-  // console.error(authChecker.check());
-
-  // macrotask
-  // setTimeout(() => {
-  //   console.error(authChecker.check());
-
-  //   customWithLayersZoned([authLayer], () => {
-  //     setTimeout(() => {
-  //       console.error(authChecker.check());
-
-
-  //       // customWithLayersZoned([authLayer], () => {
-  //       //   request().then(() => {
-  //       //     console.log(authChecker.check());
-  //       //   });
-  //       // });
-  //     }, 900);
-  //   });
-  // }, 1000);
-
-  // setInterval
-  // setInterval(() => {
-  //   console.log(authChecker.check());
-  // }, 1000);
 
   // await request();
-  // console.warn(authChecker.check());
+  // console.error(authChecker.check());
 
-
-
-  // eventtask
-  document.getElementById("btn").addEventListener("click", clickHandler);
+  // // // event task
+  // document.getElementById("btn").addEventListener("click", clickHandler);
 });
