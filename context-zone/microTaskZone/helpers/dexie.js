@@ -38,7 +38,7 @@ import {
 //   native async / await.
 // * Promise.follow() method built upon the custom zone engine, that allows user to track all promises created from current stack frame
 //   and below + all promises that those promises creates or awaits.
-// * Detect any unhandled promise in a PSD-scope (PSD.onunhandled). 
+// * Detect any unhandled promise in a PSD-scope (PSD.onunhandled).
 //
 // David Fahlander, https://github.com/dfahlander
 //
@@ -48,7 +48,7 @@ var INTERNAL = {};
 // Async stacks (long stacks) must not grow infinitely.
 export const
   LONG_STACKS_CLIP_LIMIT = 100,
-  // When calling error.stack or promise.stack, limit the number of asyncronic stacks to print out. 
+  // When calling error.stack or promise.stack, limit the number of asyncronic stacks to print out.
   MAX_LONG_STACKS = 20,
   ZONE_ECHO_LIMIT = 100,
   [resolvedNativePromise, nativePromiseProto, resolvedGlobalPromise] = typeof Promise === "undefined" ?
@@ -279,7 +279,6 @@ const thenProp = {
     const psd = PSD, microTaskId = totalEchoes;
 
     function then(onFulfilled, onRejected) {
-      // console.log("全");
       const possibleAwait = !psd.global && (psd !== PSD || microTaskId !== totalEchoes);
       if (possibleAwait) {
         // async/await使用時
@@ -391,7 +390,7 @@ function Listener(onFulfilled, onRejected, resolve, reject, zone) {
 props(DexiePromise, {
   all: function () {
     var values = getArrayOf.apply(null, arguments) // Supports iterables, implicit arguments and array-like.
-      .map(onPossibleParallellAsync); // Handle parallell async/awaits 
+      .map(onPossibleParallellAsync); // Handle parallell async/awaits
     return new DexiePromise(function (resolve, reject) {
       if (values.length === 0)
         resolve([]);

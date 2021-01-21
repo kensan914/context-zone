@@ -158,7 +158,6 @@ function switchToZone(targetZone, isEnteringZone) {
 
       // このPromiseをwindow.Promiseに設定することで、遷移した非同期関数がFirefox、Safari、IE、そしてZonejsやangularでも動作するようにします。
       Object.defineProperty(_global, "Promise", targetEnv.PromiseProp);
-      console.warn(Promise);
 
       // Promise.all()などをサポートし、es6-promise をモジュールとして含めている場合にも indexedDB-safe で動作するようにした (global.Promise にアクセスしているのではなく、ローカルで参照している可能性があります)。
       GlobalPromise.all = targetEnv.all;

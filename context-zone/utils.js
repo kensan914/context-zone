@@ -1,100 +1,74 @@
-import { LayerStack } from "../ContextJS/src/Layers.js";
 import "zone.js";
+import { currentLayers, LayerStack } from "../ContextJS/src/Layers.js";
 
 
-export const generateZoneSettings = (zoneName, activeTask, overwriteSettings = {}) => {
-  const zoneSettings = {
-    ... {
-      name: zoneName,
-      onInvokeTask: (delegate, curr, target, task, applyThis, applyArgs) => { },
+/**
+ * return [restoreLayerStack, unrestoreLayerStack]
+ */
+export const useReplayLayerStack = (frame, zoneName) => {
+  // const initLayerStack = getCurrentLayerStack();
+  const zonedLayerStack = getCurrentLayerStack();
+  frame.zoneName = zoneName;
+  zonedLayerStack.push(frame);
 
-      // onHasTask: (delegate, curr, target, hasTaskState) => {
-      //   console.log("1");
+  // LayerStackから_zoneNameのframeを削除
+  const deleteFromLayerStack = (_zoneName) => {
+    const targetIndex = LayerStack.findIndex(elm => (
+      elm.zoneName === _zoneName
+    ));
+    if (targetIndex !== -1) {
+      LayerStack.splice(targetIndex, 1);
+    }
+  }
 
-      //   // 非同期タスクの実行待ち状態が変化した時にトリガーされます
-      //   if (!hasTaskState.microTask && hasTaskState.change === "microTask") {
-      //     console.error("microTask(Promise.then)を終了しました");
-      //     // deactivateWithLayerZoned(activeTask, hasTaskState.change, zoneName);
-      //   } else if (!hasTaskState.macroTask && hasTaskState.change === "macroTask") {
-      //     console.error("macroTask(setTimeout.callback)を終了しました。");
-      //     deactivateWithLayerZoned(activeTask, hasTaskState.change, zoneName);
-      //   } else if (!hasTaskState.eventTask && hasTaskState.change === "eventTask") {
-      //     console.error("eventTaskを終了しました。");
-      //     deactivateWithLayerZoned(activeTask, hasTaskState.change, zoneName);
-      //   }
-      //   return delegate.hasTask(target, hasTaskState);
-      // },
-
-      // onScheduleTask: (delegate, curr, target, task) => {
-      //   console.log("2");
-      //   if (Zone.current.name === zoneName) {
-      //     // console.log("new task is scheduled:", task.type, task.source);
-      //   }
-      //   return delegate.scheduleTask(target, task);
-      // },
-
-      // onInvoke: (delegate, curr, target, callback, applyThis, applyArgs) => {
-      //   console.log("3");
-      //   // console.log({ ...target });
-      //   if (Zone.current.name === zoneName) {
-      //     // console.log("the callback will be invoked:", callback);
-      //   }
-
-      //   //// 仮 ////
-      //   const _callback = function () {
-      //     console.log("非同期タスク開始");
-      //     console.log([...LayerStack]);
-      //     const frame = { test: "test" };
-      //     frame.zoneName = zoneName;
-      //     frame.taskType = "test";
-      //     // LayerStack.push(frame);
-      //     callback.apply(this, arguments);
-      //     console.log("非同期タスク終了");
-      //     console.log([...LayerStack]);
-      //   }
-      //   //// 仮 ////
-      //   console.log(_callback);
-
-      //   return delegate.invoke(target, _callback, applyThis, applyArgs);
-      // },
-    },
-    ...overwriteSettings,
+  const restoreLayerStack = () => {
+    applyToLayerStack(zonedLayerStack);
+  };
+  const unrestoreLayerStack = () => {
+    // deleteFromLayerStack(zoneName);
+    zonedLayerStack.forEach(_frame => {
+      if (_frame.zoneName) deleteFromLayerStack(_frame.zoneName);
+    });
+    console.error([...LayerStack]);
   };
 
-  return zoneSettings;
+  return [restoreLayerStack, unrestoreLayerStack];
+}
+
+/**
+ * return [replayZoneCurrentEnter, replayZoneCurrentLeave]
+ */
+export const useReplayZoneCurrent = (zone, rootZone) => {
+  const replayZoneCurrent = (_zone) => {
+    Object.defineProperty(Zone, "current", {
+      value: _zone,
+      writable: true,
+      configurable: true,
+      enumerable: false,
+    });
+  }
+
+  const replayZoneCurrentEnter = () => replayZoneCurrent(zone);
+  const replayZoneCurrentLeave = () => replayZoneCurrent(rootZone);
+
+  return [replayZoneCurrentEnter, replayZoneCurrentLeave];
 }
 
 
-export const generateOnInvokeTaskCallback = (zoneName, activeTask, frame) => {
+export const generateOnInvokeTaskCallback = (frame, zoneName) => {
+  const [restoreLayerStack, unrestoreLayerStack] = useReplayLayerStack(frame, zoneName);
+
   return (delegate, curr, target, task, applyThis, applyArgs) => {
-    // console.log("4");
-    // console.log({ ...task });
-
-    wrapCallbackTask(task, () => {
-      activateWithLayerZoned(frame, activeTask, task.type, zoneName);
-    }, () => {
-      deactivateWithLayerZoned(activeTask, task.type, zoneName);
-    });
-
-    // 非同期タスクが実行されるときにトリガーされます
-    if (Zone.current.name === zoneName) {
-      switch (task.type) {
-        // case "microTask":
-        //   // activateWithLayerZoned(frame, activeTask, task.type, zoneName);
-        //   console.warn("microTask(Promise.then)を開始します");
-        //   break;
-        case "macroTask":
-          activateWithLayerZoned(frame, activeTask, task.type, zoneName);
-          console.warn("macroTask(setTimeout.callback)を開始します");
-          break;
-        case "eventTask":
-          activateWithLayerZoned(frame, activeTask, task.type, zoneName);
-          console.warn("eventTaskを開始します");
-          break;
-      }
+    let _task = task;
+    if (task.type !== "microTask") {
+      _task = wrapCallbackTask(
+        task,
+        restoreLayerStack,
+        unrestoreLayerStack,
+      );
     }
 
-    return delegate.invokeTask(target, task, applyThis, applyArgs);
+    return delegate.invokeTask(target, _task, applyThis, applyArgs);
   }
 }
 
@@ -111,43 +85,16 @@ const wrapCallbackTask = (task, invokeTaskCallback, endTaskCallback) => {
     }
     task.isWrappedCallback = true;
   } else {
-    // alredy wrapped
+    // already wrapped
     console.log("すでに包まれている");
   }
+
+  return task;
 }
 
-
-const activateWithLayerZoned = (frame, activeTask, taskType, zoneName) => {
-  if (!activeTask[taskType]) {
-    frame.zoneName = zoneName;
-    frame.taskType = taskType;
-    LayerStack.push(frame);
-    activeTask[taskType] = true;
-    console.log("アクティベート");
-    // console.log(zoneName);
-    // console.log({ ...activeTask });
-    console.log([...LayerStack]);
-  }
-}
-
-const deactivateWithLayerZoned = (activeTask, taskType, zoneName) => {
-  if (activeTask[taskType]) {
-    const targetIndex = LayerStack.findIndex(elm => {
-      return (elm.zoneName === zoneName && elm.taskType === taskType);
-    });
-    if (targetIndex !== -1) {
-      LayerStack.splice(targetIndex, 1);
-      activeTask[taskType] = false;
-    }
-    console.log("ディアクティベート");
-    // console.log(zoneName);
-    // console.log({ ...activeTask });
-    console.log([...LayerStack]);
-  }
-}
 
 /**
- * task keyの生成
+ * zone nameの生成
  */
 export const generateZoneName = () => {
   const chars = [];
@@ -167,19 +114,13 @@ export const generateZoneName = () => {
   return chars.join("");
 };
 
-
-export const copyLayerStack = () => {
-  return LayerStack.map(frame => ({ ...frame }));
-}
-
-
-export function replayLayerStack(from) {
+export function applyToLayerStack(from) {
   const fromLength = from.length;
   const LayerStackLength = LayerStack.length;
   const maxLengthCommonAncestry = Math.min(fromLength, LayerStackLength);
   let commonAncestryLength = 0;
 
-  while (commonAncestryLength < maxLengthCommonAncestry && frameEquals(from[commonAncestryLength], LayerStack[commonAncestryLength])) {
+  while (commonAncestryLength < maxLengthCommonAncestry && from[commonAncestryLength]?.zoneName === LayerStack[commonAncestryLength]?.zoneName) {
     commonAncestryLength++;
   }
 
@@ -252,5 +193,22 @@ export function frameEquals(frame1, frame2) {
     }
 
     return !arr1 && !arr2; // both do not define the prop is fine, too
+  });
+}
+
+
+export function getCurrentLayerStack() {
+  return LayerStack.map((frame) => {
+    const resultFrame = {};
+
+    // use copied arrays of layers
+    if (frame.withLayers) {
+      resultFrame.withLayers = Array.from(frame.withLayers)
+    }
+    if (frame.withoutLayers) {
+      resultFrame.withoutLayers = Array.from(frame.withoutLayers)
+    }
+
+    return Object.assign(resultFrame, frame);
   });
 }
