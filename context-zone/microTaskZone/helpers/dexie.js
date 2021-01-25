@@ -17,7 +17,7 @@ import {
   onPossibleParallellAsync,
   newScope,
   usePSD
-} from "./psd";
+} from "./psd.js";
 
 
 //
