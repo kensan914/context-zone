@@ -1,7 +1,7 @@
 // node --experimental-modules main.js
-import { layer } from './ContextJS/src/contextjs.js';
-import { withLayersZone, withoutLayersZone } from "./context-zone/contextZone.js";
-import { LayerStack, proceed } from "./ContextJS/src/Layers.js";
+import { layer } from "../../../ContextJS/src/contextjs.js";
+import { withLayersZone, withoutLayersZone } from "../../../context-zone/contextZone.js";
+import { LayerStack, proceed } from "../../../ContextJS/src/Layers.js";
 
 
 class AuthChecker {
@@ -41,27 +41,25 @@ const clickHandler = (e) => {
 
 withLayersZone([authLayer], async () => {
   // Promise
-  console.warn(window);
-  window.undefined;
-  // request()
-  //   .then(async (res) => {
-  //     console.error(authChecker.check());
+  request()
+    .then(async (res) => {
+      console.error(authChecker.check());
 
-  //     withoutLayersZone([authLayer], () => {
-  //       request()
-  //         .then((res) => {
-  //           console.error([...LayerStack]);
-  //           console.error(authChecker.check());
-  //         })
-  //         .finally(() => {
-  //         });
-  //     });
-  //   })
-  //   .catch((err) => {
-  //     console.error("err");
-  //   })
-  //   .finally(() => {
-  //   });
+      withoutLayersZone([authLayer], () => {
+        request()
+          .then((res) => {
+            console.error([...LayerStack]);
+            console.error(authChecker.check());
+          })
+          .finally(() => {
+          });
+      });
+    })
+    .catch((err) => {
+      console.error("err");
+    })
+    .finally(() => {
+    });
 
   // await request();
   // console.error(authChecker.check());

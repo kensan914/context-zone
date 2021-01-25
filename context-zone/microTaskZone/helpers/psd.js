@@ -7,7 +7,7 @@ import DexiePromise, {
   nativePromiseProto,
   nativePromiseThen,
   resolvedNativePromise
-} from "./dexie";
+} from "./dexie.js";
 
 
 export const microTaskScope = (callback, props) => {
