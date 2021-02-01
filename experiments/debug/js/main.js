@@ -37,29 +37,30 @@ const request = () => new Promise((resolve) => {
 const clickHandler = (e) => {
   console.log(e);
   console.error(authChecker.check());
+  request().then(res => console.error(authChecker.check()))
 }
 
 withLayersZone([authLayer], async () => {
   // Promise
-  request()
-    .then(async (res) => {
-      console.error(authChecker.check());
+  // request()
+  //   .then(async (res) => {
+  //     console.error(authChecker.check());
 
-      withoutLayersZone([authLayer], () => {
-        request()
-          .then((res) => {
-            console.error([...LayerStack]);
-            console.error(authChecker.check());
-          })
-          .finally(() => {
-          });
-      });
-    })
-    .catch((err) => {
-      console.error("err");
-    })
-    .finally(() => {
-    });
+  //     withoutLayersZone([authLayer], () => {
+  //       request()
+  //         .then((res) => {
+  //           console.error([...LayerStack]);
+  //           console.error(authChecker.check());
+  //         })
+  //         .finally(() => {
+  //         });
+  //     });
+  //   })
+  //   .catch((err) => {
+  //     console.error("err");
+  //   })
+  //   .finally(() => {
+  //   });
 
   // await request();
   // console.error(authChecker.check());

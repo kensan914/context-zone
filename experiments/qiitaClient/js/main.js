@@ -1,5 +1,6 @@
 import { withLayersZone, withoutLayersZone } from "../../../context-zone/contextZone.js";
 import { layer, withLayers, withoutLayers } from "../../../ContextJS/src/contextjs.js";
+import { LayerStack } from "../../../ContextJS/src/Layers.js";
 import { ACCESS_TOKEN } from "./tokens.js";
 
 
@@ -44,6 +45,7 @@ class ListRenderer {
     return cardElm;
   }
   renderList(listDataSet) {
+    this.listElm.innerHTML = ""; // 古いitemsを削除
     listDataSet.forEach(listData => {
       const card = this.renderCard(listData.title, listData.subTitle, listData.id);
       this.listElm.appendChild(card);
@@ -79,13 +81,13 @@ class RequestClient {
   }
 }
 
-const userListLayer = layer("userListLayer");
-userListLayer.refineClass(ListRenderer, {
+const userTabLayer = layer("userTabLayer");
+userTabLayer.refineClass(ListRenderer, {
   getListElm() {
     return document.getElementById("user-list");
   }
 });
-userListLayer.refineClass(RequestClient, {
+userTabLayer.refineClass(RequestClient, {
   getUrl() {
     return BASE_URL + USERS_URL;
   },
@@ -111,6 +113,7 @@ const displayList = () => {
     listRenderer.renderList(listDataSet);
 
     defineClickEvent(listRenderer.listElm); // EventTask. cardが生成されてからevent定義
+    // scheduleFetch(); // MacroTask
   });
 }
 
@@ -118,8 +121,8 @@ const displayList = () => {
  * 違い: 既存手法では、ユーザのtitle, subtitleが崩れる(titleやらupdated_atやら存在しないkeyを指定されるため).
  */
 displayList();
-withLayers([userListLayer], displayList);
-// withLayersZone([userListLayer], displayList);
+// withLayers([userTabLayer], displayList);
+withLayersZone([userTabLayer], displayList);
 
 
 class ClickEventDefiner {
@@ -128,19 +131,18 @@ class ClickEventDefiner {
   }
   define(elm) {
     elm.addEventListener("click", () => {
-      console.log(this.geneDetailUrl(elm)); // 疑似request
+      console.log(this.geneDetailUrl(elm)); // 擬似的な画面遷移
     });
   }
 }
-
-userListLayer.refineClass(ClickEventDefiner, {
+userTabLayer.refineClass(ClickEventDefiner, {
   geneDetailUrl(elm) {
     return `/user/${elm.id}`;
   }
 });
-
 const defineClickEvent = (listElm) => {
   const clickEventDefiner = new ClickEventDefiner();
+  // listElmの子要素でループを回す
   Array.prototype.forEach.call(listElm.children, cardElm => {
     clickEventDefiner.define(cardElm);
   });
@@ -149,9 +151,35 @@ const defineClickEvent = (listElm) => {
 /** EventTask
  * 違い: 生成されたurlが既存手法ではどちらもpost/...となってしまう。
  */
-// withLayersZone([userListLayer], defineClickEvent); // まだcardが生成されていない
+// withLayersZone([userTabLayer], defineClickEvent); // まだcardが生成されていない
 
+
+
+class FetchScheduler {
+  getIntervalTime() {
+    return 1/* min */ * 60 * 1000;
+  }
+  schedule() {
+    setInterval(() => {
+      console.warn("post");
+      displayList();
+    }, this.getIntervalTime());
+  }
+}
+userTabLayer.refineClass(FetchScheduler, {
+  getIntervalTime() {
+    return 5/* min */ * 60 * 1000;
+  },
+});
+
+const scheduleFetch = () => {
+  const fetchScheduler = new FetchScheduler();
+  fetchScheduler.schedule();
+}
 
 /** MacroTask
  * 違い:
  */
+scheduleFetch();
+// withLayers([userTabLayer], scheduleFetch);
+withLayersZone([userTabLayer], scheduleFetch);

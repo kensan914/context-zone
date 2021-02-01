@@ -1,12 +1,12 @@
 import "zone.js";
-import { currentLayers, LayerStack } from "../ContextJS/src/Layers.js";
+import { currentLayers, LayerStack, resetLayerStack } from "../ContextJS/src/Layers.js";
+import { withLayersZone } from "./contextZone.js";
 
 
 /**
  * return [restoreLayerStack, unrestoreLayerStack]
  */
 export const useReplayLayerStack = (frame, zoneName) => {
-  // const initLayerStack = getCurrentLayerStack();
   const zonedLayerStack = getCurrentLayerStack();
   frame.zoneName = zoneName;
   zonedLayerStack.push(frame);
@@ -25,9 +25,11 @@ export const useReplayLayerStack = (frame, zoneName) => {
     applyToLayerStack(zonedLayerStack);
   };
   const unrestoreLayerStack = () => {
-    // deleteFromLayerStack(zoneName);
     zonedLayerStack.forEach(_frame => {
-      if (_frame.zoneName) deleteFromLayerStack(_frame.zoneName);
+      if (_frame.zoneName) {
+        deleteFromLayerStack(_frame.zoneName);
+      } else {
+      }
     });
     console.error([...LayerStack]);
   };
@@ -55,7 +57,7 @@ export const useReplayZoneCurrent = (zone, rootZone) => {
 }
 
 
-export const generateOnInvokeTaskCallback = (frame, zoneName) => {
+export const generateOnInvokeTaskCallback = (frame, zoneName, wrapWithFrameZone) => {
   const [restoreLayerStack, unrestoreLayerStack] = useReplayLayerStack(frame, zoneName);
 
   return (delegate, curr, target, task, applyThis, applyArgs) => {
@@ -65,6 +67,7 @@ export const generateOnInvokeTaskCallback = (frame, zoneName) => {
         task,
         restoreLayerStack,
         unrestoreLayerStack,
+        wrapWithFrameZone,
       );
     }
 
@@ -73,20 +76,25 @@ export const generateOnInvokeTaskCallback = (frame, zoneName) => {
 }
 
 
-const wrapCallbackTask = (task, invokeTaskCallback, endTaskCallback) => {
+const wrapCallbackTask = (task, invokeTaskCallback, endTaskCallback, wrapWithFrameZone) => {
   if (!task.isWrappedCallback) {
     // not wrapped yet
     const _callback = task.callback;
 
     task.callback = function () {
-      invokeTaskCallback();
-      _callback.apply(this, arguments);
-      endTaskCallback();
+      wrapWithFrameZone(() => {
+        _callback.apply(this, arguments);
+      }).call();
+      // invokeTaskCallback();
+      // withLayersZone(layers, () => {
+      //   _callback.apply(this, arguments);
+      // });
+      // endTaskCallback();
     }
     task.isWrappedCallback = true;
   } else {
     // already wrapped
-    console.log("すでに包まれている");
+    console.log("already wrapped.");
   }
 
   return task;
@@ -198,6 +206,9 @@ export function frameEquals(frame1, frame2) {
 
 
 export function getCurrentLayerStack() {
+  if (LayerStack.length === 0) {
+    resetLayerStack();
+  }
   return LayerStack.map((frame) => {
     const resultFrame = {};
 

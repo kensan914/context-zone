@@ -4,10 +4,10 @@ import { decrementExpectedAwaits, incrementExpectedAwaits, microTaskScope } from
 import { generateOnInvokeTaskCallback, generateZoneName, useReplayLayerStack, useReplayZoneCurrent } from "./utils.js";
 
 
-const withFrame = (frame, activateCallback) => {
+const withFrame = (frame, activateCallback, wrapWithFrameZone) => {
   const zoneName = generateZoneName();
 
-  const onInvokeTaskCallback = generateOnInvokeTaskCallback(frame, zoneName);
+  const onInvokeTaskCallback = generateOnInvokeTaskCallback(frame, zoneName, wrapWithFrameZone);
   const zone = Zone.current.fork({
     name: zoneName,
     onInvokeTask: onInvokeTaskCallback,
@@ -19,6 +19,7 @@ const withFrame = (frame, activateCallback) => {
 const withFrameZone = (layers, callback, isActivation) => {
   const frame = { [isActivation ? "withLayers" : "withoutLayers"]: layers };
   const withDynamicExtent = isActivation ? withLayers : withoutLayers;
+  const wrapWithFrameZone = (_callback) => () => withFrameZone(layers, _callback, isActivation);
   let returnValue;
 
   withFrame(frame, (zone) => {
@@ -51,7 +52,7 @@ const withFrameZone = (layers, callback, isActivation) => {
         }
       });
     });
-  });
+  }, wrapWithFrameZone);
 }
 
 export const withLayersZone = (layers, callback) => {
