@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="ja">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>dropdown demo(EventTask)</title>
+  <link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.1.0/css/all.css"
+    integrity="sha384-lKuwvrZot6UHsBSfcMvOkWwlCMgc0TaWr+30HWe3a4ltaBwTZhyTEggF5tJv8tbt" crossorigin="anonymous">
+  <style type="text/css">
+    .container {
+      display: flex;
+      justify-content: flex-end;
+      position: relative;
+      margin: 10px;
+    }
+
+    .dropdown-menu {
+      display: none;
+      position: absolute;
+      border: thin solid gray;
+      border-radius: 10px;
+      box-shadow: 0 4px 10px 0 rgba(0, 0, 0, .2);
+      top: 60px;
+    }
+
+    #dropDownMenu.active {
+      display: inline-block !important;
+    }
+
+    #dropDownMenu.landscape {
+      top: 0px;
+      right: 160px;
+    }
+
+    .dropdown-child {
+      display: flex;
+    }
+
+    .dropdown-list {
+      margin: 4px;
+      margin-right: 0px;
+      margin-left: 0px;
+      padding: 0px;
+    }
+
+    .dropdown-list li {
+      margin-bottom: 3px;
+      margin-right: 10px;
+      margin-left: 10px;
+      line-height: 1.5;
+      padding: 0.5em;
+      list-style-type: none !important;
+      font-size: 21px;
+    }
+
+    .dropdown-button:focus {
+      outline: none;
+    }
+
+    .dropdown-button {
+      width: 160px;
+      height: 60px;
+      position: relative;
+      font-weight: bold;
+      font-size: 30px;
+      padding: 0.25em 0.5em;
+      text-decoration: none;
+      color: gray;
+      background: gold;
+      transition: .4s;
+      border: none;
+      border-radius: 8px;
+    }
+
+    .navbar {
+      width: 100%;
+      height: 60px;
+      border-bottom: thin solid gray;
+      display: flex;
+      flex-direction: row;
+      justify-content: flex-end;
+      align-items: center;
+    }
+
+    .navbar-item {
+      margin-right: 20px;
+      margin-left: 20px;
+      font-size: 20px;
+      color: dimgray;
+      font-weight: 500;
+    }
+
+    body {
+      margin: 0px;
+    }
+  </style>
+</head>
+
+<body>
+  <div class="navbar">
+    <div class="navbar-item">ホーム</div>
+    <div class="navbar-item">マイページ</div>
+  </div>
+  <div class="container">
+    <button id="dropDownButton" class="dropdown-button">
+      購入 <i class="fas fa-caret-down"></i>
+    </button>
+
+    <div id="dropDownMenu" class="dropdown-menu">
+      <div class="dropdown-child">
+        <ul class="dropdown-list">
+          <li><b>カートに入れる</b></li>
+          <hr>
+          <li><b>今すぐ購入</b></li>
+          <hr>
+          <li><b>お気に入りに追加</b></li>
+          <hr>
+          <li><b>在庫状況を確認</b></li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</body>
+
+
+<script type="text/javascript" src="../dist/eventTask.index.js"></script>
+
+</html>

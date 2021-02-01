@@ -289,17 +289,17 @@ eval("__webpack_require__.r(__webpack_exports__);\n/* harmony export */ __webpac
 
 /***/ }),
 
-/***/ "./experiments/debug/js/main.js":
-/*!**************************************!*\
-  !*** ./experiments/debug/js/main.js ***!
-  \**************************************/
+/***/ "./experiments/eventTask/js/main.js":
+/*!******************************************!*\
+  !*** ./experiments/eventTask/js/main.js ***!
+  \******************************************/
 /*! namespace exports */
 /*! exports [not provided] [no usage info] */
 /*! runtime requirements: __webpack_require__, __webpack_require__.r, __webpack_exports__, __webpack_require__.* */
 /***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
 
 "use strict";
-eval("__webpack_require__.r(__webpack_exports__);\n/* harmony import */ var _ContextJS_src_contextjs_js__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ../../../ContextJS/src/contextjs.js */ \"./ContextJS/src/contextjs.js\");\n/* harmony import */ var _context_zone_contextZone_js__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ../../../context-zone/contextZone.js */ \"./context-zone/contextZone.js\");\n/* harmony import */ var _ContextJS_src_Layers_js__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ../../../ContextJS/src/Layers.js */ \"./ContextJS/src/Layers.js\");\n// node --experimental-modules main.js\n\n\n\n\n\nclass AuthChecker {\n  check() {\n    return \"認証情報が見つかりません\";\n  }\n}\nconst authChecker = new AuthChecker();\n\nconst authLayer = (0,_ContextJS_src_contextjs_js__WEBPACK_IMPORTED_MODULE_0__.layer)(\"authLayer\");\nauthLayer.refineClass(AuthChecker, {\n  check() {\n    // return `認証済みです`;\n    return `認証済みです(${(0,_ContextJS_src_Layers_js__WEBPACK_IMPORTED_MODULE_2__.proceed)()})`;\n  }\n});\n\nconst authLayer2 = (0,_ContextJS_src_contextjs_js__WEBPACK_IMPORTED_MODULE_0__.layer)(\"authLayer2\");\nauthLayer2.refineObject(authChecker, {\n  check() {\n    return `認証済みです2`;\n    // return `認証済みです2(${proceed()})`;\n  },\n});\n\n// 擬似的なリクエスト処理\nconst request = () => new Promise((resolve) => {\n  setTimeout(() => {\n    resolve(\"response\");\n  }, 1000);\n});\n\nconst clickHandler = (e) => {\n  console.log(e);\n  console.error(authChecker.check());\n  request().then(res => console.error(authChecker.check()))\n}\n\n;(0,_context_zone_contextZone_js__WEBPACK_IMPORTED_MODULE_1__.withLayersZone)([authLayer], async () => {\n  // Promise\n  // request()\n  //   .then(async (res) => {\n  //     console.error(authChecker.check());\n\n  //     withoutLayersZone([authLayer], () => {\n  //       request()\n  //         .then((res) => {\n  //           console.error([...LayerStack]);\n  //           console.error(authChecker.check());\n  //         })\n  //         .finally(() => {\n  //         });\n  //     });\n  //   })\n  //   .catch((err) => {\n  //     console.error(\"err\");\n  //   })\n  //   .finally(() => {\n  //   });\n\n  // await request();\n  // console.error(authChecker.check());\n\n  // // // event task\n  // document.getElementById(\"btn\").addEventListener(\"click\", clickHandler);\n});\n\n\n//# sourceURL=webpack:///./experiments/debug/js/main.js?");
+eval("__webpack_require__.r(__webpack_exports__);\n/* harmony import */ var _ContextJS_src_contextjs_js__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ../../../ContextJS/src/contextjs.js */ \"./ContextJS/src/contextjs.js\");\n/* harmony import */ var _context_zone_contextZone_js__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ../../../context-zone/contextZone.js */ \"./context-zone/contextZone.js\");\n/* harmony import */ var _ContextJS_src_Layers_js__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ../../../ContextJS/src/Layers.js */ \"./ContextJS/src/Layers.js\");\n\n\n\n\n\nclass DropDownManager {\n  constructor() {\n    this.dropdownMenu = document.getElementById(\"dropDownMenu\");\n  }\n  show() {\n    this.dropdownMenu.classList.add(\"active\");\n  }\n}\nconst landscapeLayer = (0,_ContextJS_src_contextjs_js__WEBPACK_IMPORTED_MODULE_0__.layer)(\"landscapeLayer\");\nlandscapeLayer.refineClass(DropDownManager, {\n  show() {\n    (0,_ContextJS_src_Layers_js__WEBPACK_IMPORTED_MODULE_2__.proceed)();\n    this.dropdownMenu.classList.add(\"landscape\");\n  }\n});\nconst dropDownManager = new DropDownManager();\n// withLayers([landscapeLayer], () => {\n//   const dropDownButton = document.getElementById(\"dropDownButton\");\n//   dropDownButton.addEventListener(\"click\", () => {\n//     dropDownManager.show();\n//   });\n// });\n(0,_context_zone_contextZone_js__WEBPACK_IMPORTED_MODULE_1__.withLayersZone)([landscapeLayer], () => {\n  const dropDownButton = document.getElementById(\"dropDownButton\");\n  dropDownButton.addEventListener(\"click\", () => {\n    dropDownManager.show();\n  });\n});\n\n\n//# sourceURL=webpack:///./experiments/eventTask/js/main.js?");
 
 /***/ }),
 
@@ -396,7 +396,7 @@ eval("/**\n* @license Angular v11.0.0-next.6+162.sha-170af07\n* (c) 2010-2020 Go
 /************************************************************************/
 /******/ 	// startup
 /******/ 	// Load entry module
-/******/ 	__webpack_require__("./experiments/debug/js/main.js");
+/******/ 	__webpack_require__("./experiments/eventTask/js/main.js");
 /******/ 	// This entry module used 'exports' so it can't be inlined
 /******/ })()
 ;
