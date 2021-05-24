@@ -6,9 +6,8 @@ import DexiePromise, {
   NativePromise,
   nativePromiseProto,
   nativePromiseThen,
-  resolvedNativePromise
+  resolvedNativePromise,
 } from "./dexie.js";
-
 
 export const microTaskScope = (callback, props) => {
   let returnValue;
@@ -25,7 +24,7 @@ export const microTaskScope = (callback, props) => {
       decrementExpectedAwaits();
     }
   }
-}
+};
 
 export let globalPSD = {
   id: "global",
@@ -36,17 +35,16 @@ export let globalPSD = {
   pgp: false,
   env: {},
   finalize: function () {
-    this.unhandleds.forEach(uh => {
+    this.unhandleds.forEach((uh) => {
       try {
         globalError(uh[0], uh[1]);
-      } catch (e) { }
+      } catch (e) {}
     });
-  }
+  },
 };
 
 export let PSD = globalPSD;
 globalPSD.env = snapShot();
-
 
 // native awaitのサポートに使用される変数。variables used for native await support
 const task = { awaits: 0, echoes: 0, id: 0 }; // ゾーンエコー使用時の進行中のmacro task。
@@ -68,18 +66,25 @@ export function newScope(fn, props, a1, a2) {
 
   // Promiseパッチの準備（usePSDで行います）。
   let globalEnv = globalPSD.env;
-  psd.env = patchGlobalPromise ? { // patchGlobalPromise = true
-    Promise: DexiePromise, // IDB+Promiseが活躍するChromeやEdgeでは、window.Promiseの変更は省略できるかもしれません。
-    PromiseProp: { value: DexiePromise, configurable: true, writable: true }, // definePropertyによるPromiseの定義に用いる。
-    all: DexiePromise.all,
-    race: DexiePromise.race,
-    allSettled: DexiePromise.allSettled,
-    any: DexiePromise.any,
-    resolve: DexiePromise.resolve,
-    reject: DexiePromise.reject,
-    nthen: getPatchedPromiseThen(globalEnv.nthen, psd), // native then
-    gthen: getPatchedPromiseThen(globalEnv.gthen, psd) // global then
-  } : {};
+  psd.env = patchGlobalPromise
+    ? {
+        // patchGlobalPromise = true
+        Promise: DexiePromise, // IDB+Promiseが活躍するChromeやEdgeでは、window.Promiseの変更は省略できるかもしれません。
+        PromiseProp: {
+          value: DexiePromise,
+          configurable: true,
+          writable: true,
+        }, // definePropertyによるPromiseの定義に用いる。
+        all: DexiePromise.all,
+        race: DexiePromise.race,
+        allSettled: DexiePromise.allSettled,
+        any: DexiePromise.any,
+        resolve: DexiePromise.resolve,
+        reject: DexiePromise.reject,
+        nthen: getPatchedPromiseThen(globalEnv.nthen, psd), // native then
+        gthen: getPatchedPromiseThen(globalEnv.gthen, psd), // global then
+      }
+    : {};
 
   if (props) extend(psd, props); // afterEnter, afterLeave Propsを設定。
 
@@ -87,7 +92,7 @@ export function newScope(fn, props, a1, a2) {
   ++parent.ref;
   psd.finalize = function () {
     --this.parent.ref || this.parent.finalize();
-  }
+  };
   const returnValue = usePSD(psd, fn, a1, a2);
 
   if (psd.ref === 0) {
@@ -114,19 +119,23 @@ function switchToZone(targetZone, isEnteringZone) {
     // isEnteringZone ? zoneEchoesを1に : zoneEchoesを0に(既にzoneEchoes===0のとき、終了)
     // isEnteringZone ===> decrementExpectedAwaits()が実行されtask.echoesが0になり終了
     // !isEnteringZone ===> isEnteringZoneのときにzoneEchoesがインクリメントされず0となり終了
-    isEnteringZone ?
-      task.echoes && (!zoneEchoes++ || targetZone !== PSD) :
-      zoneEchoes && (!--zoneEchoes || targetZone !== PSD)
+    isEnteringZone
+      ? task.echoes && (!zoneEchoes++ || targetZone !== PSD)
+      : zoneEchoes && (!--zoneEchoes || targetZone !== PSD)
   ) {
     // ゾーンへの入退出も同様に非同期的に行い、現在のティックの間に開始されたタスクが呼び出されたときにゾーンに囲まれるようにします。
-    enqueueNativeMicroTask(isEnteringZone ? zoneEnterEcho.bind(null, targetZone) : zoneLeaveEcho);
+    enqueueNativeMicroTask(
+      isEnteringZone ? zoneEnterEcho.bind(null, targetZone) : zoneLeaveEcho
+    );
   } else {
-    console.log("zoneSwitch停止");
+    // console.log("zoneSwitch停止");
   }
   if (targetZone === PSD) return;
 
   function lifeCycleCallback(fn) {
-    if (typeof fn !== "function") { return; }
+    if (typeof fn !== "function") {
+      return;
+    }
     fn(currentZone, targetZone);
   }
   if (isEnteringZone) {
@@ -135,7 +144,6 @@ function switchToZone(targetZone, isEnteringZone) {
     lifeCycleCallback(currentZone.beforeLeave);
   }
 
-  // console.error({ ...targetZone });
   // if (Object.keys(targetZone).length) return;
   PSD = targetZone; // 実際のゾーン切り替えはこの行で発生します。
 
@@ -183,10 +191,11 @@ function enqueueNativeMicroTask(job) {
 }
 
 function zoneEnterEcho(targetZone) {
-  console.log("zoneエンター");
+  // console.log("zoneエンター");
   ++totalEchoes;
 
-  if (!task.echoes || --task.echoes === 0) { // task.echoesが0, または1のとき(task.echoesが>0ときtask.echoesをデクリメント)
+  if (!task.echoes || --task.echoes === 0) {
+    // task.echoesが0, または1のとき(task.echoesが>0ときtask.echoesをデクリメント)
     task.echoes = task.id = 0; // Cancel zone echoing.
   }
 
@@ -195,13 +204,12 @@ function zoneEnterEcho(targetZone) {
 }
 
 function zoneLeaveEcho() {
-  console.log("zoneリーブ");
+  // console.log("zoneリーブ");
   var preZone = zoneStack[zoneStack.length - 1]; // zoneEnterEcho()で格納しておいたzoneを取り出し復元
   zoneStack.pop();
 
   switchToZone(preZone, false);
 }
-
 
 /**
  * scopeFuncがNativePromiseを返した場合に呼び出す関数。Promise.all() の引数に含まれる各 NativePromise についても同様です。
@@ -222,58 +230,66 @@ export function decrementExpectedAwaits(sourceTaskId) {
   task.echoes = task.awaits * ZONE_ECHO_LIMIT; // Will reset echoes to 0 if awaits is 0.
 }
 
-
 // Call from Promise.all() and Promise.race()
 export function onPossibleParallellAsync(possiblePromise) {
-  if (task.echoes && possiblePromise && possiblePromise.constructor === NativePromise) {
+  if (
+    task.echoes &&
+    possiblePromise &&
+    possiblePromise.constructor === NativePromise
+  ) {
     incrementExpectedAwaits();
-    return possiblePromise.then(x => {
-      decrementExpectedAwaits();
-      return x;
-    }, e => {
-      decrementExpectedAwaits();
-      return rejection(e);
-    });
+    return possiblePromise.then(
+      (x) => {
+        decrementExpectedAwaits();
+        return x;
+      },
+      (e) => {
+        decrementExpectedAwaits();
+        return rejection(e);
+      }
+    );
   }
   return possiblePromise;
 }
-
 
 /**
  * 現在設定されているPromiseのenvを生成しreturn.
  */
 export function snapShot() {
   var GlobalPromise = _global.Promise;
-  return patchGlobalPromise ? {
-    Promise: GlobalPromise,
-    PromiseProp: Object.getOwnPropertyDescriptor(_global, "Promise"),
-    all: GlobalPromise.all,
-    race: GlobalPromise.race,
-    allSettled: GlobalPromise.allSettled,
-    any: GlobalPromise.any,
-    resolve: GlobalPromise.resolve,
-    reject: GlobalPromise.reject,
-    nthen: nativePromiseProto.then,
-    gthen: GlobalPromise.prototype.then,
-  } : {};
+  return patchGlobalPromise
+    ? {
+        Promise: GlobalPromise,
+        PromiseProp: Object.getOwnPropertyDescriptor(_global, "Promise"),
+        all: GlobalPromise.all,
+        race: GlobalPromise.race,
+        allSettled: GlobalPromise.allSettled,
+        any: GlobalPromise.any,
+        resolve: GlobalPromise.resolve,
+        reject: GlobalPromise.reject,
+        nthen: nativePromiseProto.then,
+        gthen: GlobalPromise.prototype.then,
+      }
+    : {};
 }
 
 export function nativeAwaitCompatibleWrap(fn, zone, possibleAwait) {
-  console.log("nativeAwaitCompatibleWrap");
-  return typeof fn !== "function" ? fn : function () {
-    var outerZone = PSD;
-    console.group("nativeAwaitCompatibleWrapped");
-    if (possibleAwait) incrementExpectedAwaits();
-    switchToZone(zone, true);
-    try {
-      return fn.apply(this, arguments);
-    } finally {
-      switchToZone(outerZone, false);
-      console.groupEnd();
-    }
-  };
+  // console.log("nativeAwaitCompatibleWrap");
+  return typeof fn !== "function"
+    ? fn
+    : function () {
+        var outerZone = PSD;
+        // console.group("nativeAwaitCompatibleWrapped");
+        if (possibleAwait) incrementExpectedAwaits();
+        switchToZone(zone, true);
+        try {
+          return fn.apply(this, arguments);
+        } finally {
+          switchToZone(outerZone, false);
+          // console.groupEnd();
+        }
+      };
 }
-
 
 /**
  * onFulfilled, onRejectedをラップしたthenを作成し, return。
@@ -283,9 +299,11 @@ export function nativeAwaitCompatibleWrap(fn, zone, possibleAwait) {
  */
 function getPatchedPromiseThen(origThen, zone) {
   return function (onFulfilled, onRejected) {
-    return origThen.call(this,
+    return origThen.call(
+      this,
       nativeAwaitCompatibleWrap(onFulfilled, zone, false),
-      nativeAwaitCompatibleWrap(onRejected, zone, false));
+      nativeAwaitCompatibleWrap(onRejected, zone, false)
+    );
   };
 }
 
@@ -295,27 +313,31 @@ function globalError(err, promise) {
   var rv;
   try {
     rv = promise.onuncatched(err);
-  } catch (e) { }
-  if (rv !== false) try {
-    var event, eventData = { promise: promise, reason: err };
-    if (_global.document && document.createEvent) {
-      event = document.createEvent("Event");
-      event.initEvent(UNHANDLEDREJECTION, true, true);
-      extend(event, eventData);
-    } else if (_global.CustomEvent) {
-      event = new CustomEvent(UNHANDLEDREJECTION, { detail: eventData });
-      extend(event, eventData);
-    }
-    if (event && _global.dispatchEvent) {
-      dispatchEvent(event);
-      if (!_global.PromiseRejectionEvent && _global.onunhandledrejection)
-        // No native support for PromiseRejectionEvent but user has set window.onunhandledrejection. Manually call it.
-        try { _global.onunhandledrejection(event); } catch (_) { }
-    }
-    if (debug && event && !event.defaultPrevented) {
-      console.warn(`Unhandled rejection: ${err.stack || err}`);
-    }
-  } catch (e) { }
+  } catch (e) {}
+  if (rv !== false)
+    try {
+      var event,
+        eventData = { promise: promise, reason: err };
+      if (_global.document && document.createEvent) {
+        event = document.createEvent("Event");
+        event.initEvent(UNHANDLEDREJECTION, true, true);
+        extend(event, eventData);
+      } else if (_global.CustomEvent) {
+        event = new CustomEvent(UNHANDLEDREJECTION, { detail: eventData });
+        extend(event, eventData);
+      }
+      if (event && _global.dispatchEvent) {
+        dispatchEvent(event);
+        if (!_global.PromiseRejectionEvent && _global.onunhandledrejection)
+          // No native support for PromiseRejectionEvent but user has set window.onunhandledrejection. Manually call it.
+          try {
+            _global.onunhandledrejection(event);
+          } catch (_) {}
+      }
+      if (debug && event && !event.defaultPrevented) {
+        console.warn(`Unhandled rejection: ${err.stack || err}`);
+      }
+    } catch (e) {}
 }
 
 export var rejection = DexiePromise.reject;
@@ -325,7 +347,6 @@ export var rejection = DexiePromise.reject;
 //     return DexiePromise.PSD;
 //   }
 // }
-
 
 // export function wrap(fn, errorCatcher) {
 //     var psd = PSD;
@@ -345,13 +366,11 @@ export var rejection = DexiePromise.reject;
 //     };
 // }
 
-
 // if (("" + nativePromiseThen).indexOf("[native code]") === -1) {
 //     // If the native promise" prototype is patched, we cannot rely on zone echoing.
 //     // Disable that here:
 //     incrementExpectedAwaits = decrementExpectedAwaits = nop;
 // }
-
 
 // let __zone_id__ = 1;
 // export function lZone(zone) {

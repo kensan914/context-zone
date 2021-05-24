@@ -130,7 +130,6 @@ export let tickFinalizers = []; // Finalizers to call when there are no more asy
 
 
 export default function DexiePromise(fn) {
-  // console.log("デキシープロミス");
   if (typeof this !== "object")
     throw new TypeError("Promises must be constructed via new");
   this._listeners = [];
